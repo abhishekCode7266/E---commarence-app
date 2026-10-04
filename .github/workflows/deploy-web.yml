@@ -47,30 +47,26 @@ jobs:
         run: flutter pub get
 
       - name: Analyze Project
-        run: |
-          flutter analyze || true
+        run: flutter analyze || true
 
       - name: Build Web
         id: build
         run: |
+          set -eo pipefail
           flutter build web --release --base-href "/${{ github.event.repository.name }}/" 2>&1 | tee build.log
-          STATUS=${PIPESTATUS[0]}
-          echo "BUILD_STATUS=$STATUS" >> $GITHUB_ENV
-          echo "### Flutter Build Output (Exit Code: $STATUS)" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat build.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          if [ "$STATUS" -ne 0 ]; then
-            echo "::error title=Flutter Build Failed::flutter build web failed with exit code $STATUS"
-            exit $STATUS
-          fi
+
+      - name: Publish Debug Log on Failure
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B build-debug
+          git add -f build.log
+          git commit -m "debug: flutter build log"
+          git push origin build-debug --force
 
       - name: Verify Web Build Artifacts
         run: |
-          echo "### Web Directory Listing" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          ls -la build/web >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
           ls -la build/web
           if [ ! -f build/web/index.html ]; then
             echo "::error::index.html is missing from build/web!"
