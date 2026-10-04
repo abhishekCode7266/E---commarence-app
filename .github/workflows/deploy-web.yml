@@ -36,22 +36,34 @@ jobs:
         run: flutter --version
 
       - name: Ensure Web Support
-        run: flutter create . --platforms web --project-name flutter_todo_capstone
+        run: |
+          cp web/index.html web/index.html.bak 2>/dev/null || true
+          flutter create . --platforms web --project-name flutter_todo_capstone
+          if [ -f web/index.html.bak ]; then
+            mv web/index.html.bak web/index.html
+          fi
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Build Web
         run: |
-          flutter build web --release --base-href "/${{ github.event.repository.name }}/" 2>&1 | tee build.log
+          set -eo pipefail
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/"
 
-      - name: Report Error Details
-        if: failure()
+      - name: Verify Web Build Artifacts
         run: |
-          echo "=== BUILD ERROR LOG ==="
-          cat build.log
-          ERR=$(tail -n 20 build.log | tr '\n' ' ' | tr '"' "'")
-          echo "::error title=Flutter Build Error::$ERR"
+          echo "=== Web Build Contents ==="
+          ls -la build/web
+          if [ ! -f build/web/index.html ]; then
+            echo "::error::index.html is missing from build/web!"
+            exit 1
+          fi
+          if [ ! -f build/web/main.dart.js ] && [ ! -f build/web/main.dart.wasm ]; then
+            echo "::error::main.dart.js is missing from build/web!"
+            exit 1
+          fi
+          echo "Web build successfully verified!"
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3

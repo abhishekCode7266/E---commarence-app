@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 
 /// Provider managing authentication state and user session.
 class AppAuthProvider extends ChangeNotifier {
   final AuthService _authService;
-  StreamSubscription<User?>? _authStateSubscription;
+  StreamSubscription<AppUser?>? _authStateSubscription;
 
-  User? _currentUser;
+  AppUser? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -21,10 +21,11 @@ class AppAuthProvider extends ChangeNotifier {
     });
   }
 
-  User? get user => _currentUser;
+  AppUser? get user => _currentUser;
   bool get isAuthenticated => _currentUser != null;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get isDemoMode => !_authService.isFirebaseAvailable;
 
   /// Clear any existing error message.
   void clearError() {
@@ -68,6 +69,22 @@ class AppAuthProvider extends ChangeNotifier {
         password: password,
         displayName: displayName,
       );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  /// Sign in with demo test account immediately.
+  Future<bool> loginDemo() async {
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      await _authService.signInWithDemoAccount();
       _setLoading(false);
       return true;
     } catch (e) {

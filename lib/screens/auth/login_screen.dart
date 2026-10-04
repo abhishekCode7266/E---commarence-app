@@ -231,7 +231,33 @@ class _LoginScreenState extends State<LoginScreen> {
                       isLoading: authProvider.isLoading,
                       onPressed: _handleLogin,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
+
+                    // Quick Demo Mode Button
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.rocket_launch_rounded),
+                      label: const Text(
+                        'Quick Demo Mode (1-Click Preview)',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                      onPressed: () async {
+                        final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+                        final success = await authProvider.loginDemo();
+                        if (success && mounted) {
+                          taskProvider.updateUserId(authProvider.user?.uid);
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => const TaskListScreen()),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 20),
 
                     // Navigate to Sign Up
                     Row(

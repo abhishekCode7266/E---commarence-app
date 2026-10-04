@@ -14,11 +14,17 @@ import 'utils/constants.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase with platform-specific options
+  // Initialize Firebase with platform-specific options safely
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
+    final isPlaceholder = apiKey.contains('REPLACE_WITH_YOUR');
+    if (!isPlaceholder) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } else {
+      debugPrint('Note: Running with Demo fallback (Firebase placeholder keys detected)');
+    }
   } catch (e) {
     debugPrint('Firebase initialization notice: $e');
   }
@@ -26,7 +32,7 @@ void main() async {
   // Initialize local persistent storage
   final storageService = await StorageService.init();
 
-  // Initialize notifications service
+  // Initialize notifications service safely
   try {
     await NotificationService().initialize();
   } catch (e) {
