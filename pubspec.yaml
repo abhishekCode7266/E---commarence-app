@@ -1,42 +1,38 @@
-name: Deploy Flutter Web
+name: flutter_todo_capstone
+description: "A production-ready Flutter To-Do mobile application integrated with Firebase Auth, Cloud Firestore, local & push notifications, and Material 3 theming."
+publish_to: "none"
+version: 1.0.0+1
 
-on:
-  push:
-    branches:
-      - main
+environment:
+  sdk: ">=3.2.0 <4.0.0"
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+dependencies:
+  flutter:
+    sdk: flutter
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # Firebase Core and Services
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_messaging: ^15.1.3
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+  # State Management & Storage
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.x'
-          channel: 'stable'
-          cache: true
+  # Notifications & Scheduling
+  flutter_local_notifications: ^17.2.3
+  timezone: ^0.9.4
 
-      - name: Enable Web Platform
-        run: flutter create . --platforms=web --project-name=flutter_todo_capstone[cite: 1]
+  # Utility & Formatting
+  intl: ^0.19.0
+  uuid: ^4.5.1
+  cupertino_icons: ^1.0.8
 
-      - name: Install Dependencies
-        run: flutter pub get
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
 
-      - name: Build Web App
-        run: flutter build web --release
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/web
+flutter:
+  uses-material-design: true

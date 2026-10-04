@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -28,51 +27,53 @@ class NotificationService {
   Future<void> initialize({Function(String?)? onNotificationTap}) async {
     if (_initialized) return;
 
-    // Initialize time zone database for exact reminders
-    tz.initializeTimeZones();
+    if (!kIsWeb) {
+      // Initialize time zone database for exact reminders on mobile
+      tz.initializeTimeZones();
 
-    // Android initialization settings
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+      // Android initialization settings
+      const AndroidInitializationSettings androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // Darwin (iOS/macOS) initialization settings
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+      // Darwin (iOS/macOS) initialization settings
+      const DarwinInitializationSettings iosSettings =
+          DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+      const InitializationSettings initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    await _localNotifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        if (onNotificationTap != null && response.payload != null) {
-          onNotificationTap(response.payload);
-        }
-      },
-    );
+      await _localNotifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          if (onNotificationTap != null && response.payload != null) {
+            onNotificationTap(response.payload);
+          }
+        },
+      );
 
-    // Create high-importance Android Notification Channel
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      AppConstants.notificationChannelId,
-      AppConstants.notificationChannelName,
-      description: AppConstants.notificationChannelDescription,
-      importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
-    );
+      // Create high-importance Android Notification Channel
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        AppConstants.notificationChannelId,
+        AppConstants.notificationChannelName,
+        description: AppConstants.notificationChannelDescription,
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
 
-    final androidImplementation = _localNotifications
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+      final androidImplementation = _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
 
-    if (androidImplementation != null) {
-      await androidImplementation.createNotificationChannel(channel);
+      if (androidImplementation != null) {
+        await androidImplementation.createNotificationChannel(channel);
+      }
     }
 
     // Configure FCM
@@ -85,14 +86,28 @@ class NotificationService {
   Future<bool> requestPermissions() async {
     bool localGranted = false;
 
-    if (Platform.isAndroid) {
+    if (kIsWeb) {
+      try {
+        final settings = await _fcm.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        return settings.authorizationStatus == AuthorizationStatus.authorized ||
+            settings.authorizationStatus == AuthorizationStatus.provisional;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
       final androidImplementation = _localNotifications
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       localGranted =
           await androidImplementation?.requestNotificationsPermission() ??
               false;
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       final iosImplementation = _localNotifications
           .resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin>();
@@ -120,7 +135,9 @@ class NotificationService {
 
   /// Configure Firebase Cloud Messaging event listeners.
   Future<void> _configureFCM() async {
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    }
 
     // Foreground notification listener
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -153,6 +170,8 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
+    if (kIsWeb) return;
+
     const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
         AppConstants.notificationChannelId,
@@ -176,7 +195,7 @@ class NotificationService {
     required DateTime scheduledDate,
     String? payload,
   }) async {
-    // If the due date is in the past, do not schedule
+    if (kIsWeb) return;
     if (scheduledDate.isBefore(DateTime.now())) return;
 
     final tz.TZDateTime tzScheduledDate =
@@ -213,11 +232,13 @@ class NotificationService {
 
   /// Cancel a scheduled task reminder by its ID.
   Future<void> cancelReminder(int id) async {
+    if (kIsWeb) return;
     await _localNotifications.cancel(id);
   }
 
   /// Cancel all pending notifications.
   Future<void> cancelAll() async {
+    if (kIsWeb) return;
     await _localNotifications.cancelAll();
   }
 }
