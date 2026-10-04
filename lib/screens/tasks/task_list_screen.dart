@@ -146,38 +146,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
         },
         child: Column(
           children: [
-            // Developer Inspection Mode Banner
-            if (authProvider.isDemoMode)
-              Container(
-                margin: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.55),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.primary.withOpacity(0.25)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.verified_user_rounded,
-                      size: 20,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '🔓 Developer Bypass Active — All features, stats, filters, and settings are unlocked.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
             // Overview Progress & Metric Card
             TaskStatsCard(
               total: taskProvider.totalCount,

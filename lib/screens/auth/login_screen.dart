@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
       taskProvider.updateUserId(authProvider.user?.uid);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('🔓 Developer Bypass Active: Welcome to full application inspection mode!'),
+          content: Text('🔓 Developer Mode Activated'),
           backgroundColor: Colors.teal,
           duration: Duration(seconds: 2),
         ),
@@ -160,18 +160,27 @@ class _LoginScreenState extends State<LoginScreen> {
         elevation: 0,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: FilledButton.tonalIcon(
-              style: FilledButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
-                foregroundColor: theme.colorScheme.primary,
+            padding: const EdgeInsets.only(right: 16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: _handleDeveloperBypass,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  Icons.settings_rounded,
+                  size: 20,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
-              icon: const Icon(Icons.bolt_rounded, size: 18),
-              label: const Text(
-                'Developer Bypass',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              onPressed: _handleDeveloperBypass,
             ),
           ),
         ],
@@ -221,112 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Developer Bypass Primary Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary.withOpacity(0.15),
-                            theme.colorScheme.secondary.withOpacity(0.08),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.35),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.developer_mode_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Developer Access / डेवलपर बाईपास',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    Text(
-                                      'बिना लॉगिन किए तुरंत अंदर जाकर सभी फ़ीचर्स चेक करें',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                            ),
-                            icon: const Icon(Icons.lock_open_rounded, size: 20),
-                            label: const Text(
-                              '⚡ Bypass & Inspect App Features',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            onPressed: _handleDeveloperBypass,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'OR SIGN IN WITH EMAIL',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 32),
 
                     // Email Field
                     CustomTextField(
@@ -371,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Forgot Password?'),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     // Sign In Button
                     CustomButton(
@@ -379,33 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       isLoading: authProvider.isLoading,
                       onPressed: _handleLogin,
                     ),
-                    const SizedBox(height: 12),
-
-                    // Quick Demo Mode Button
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.rocket_launch_rounded),
-                      label: const Text(
-                        'Quick Demo Mode (1-Click Preview)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
-                      onPressed: () async {
-                        final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-                        final success = await authProvider.loginDemo();
-                        if (success && mounted) {
-                          taskProvider.updateUserId(authProvider.user?.uid);
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const TaskListScreen()),
-                          );
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     // Navigate to Sign Up
                     Row(
