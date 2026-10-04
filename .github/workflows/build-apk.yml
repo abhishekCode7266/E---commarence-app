@@ -1,49 +1,37 @@
-
-name: Build Android APK
+name: Deploy Flutter Web to GitHub Pages
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
-permissions:
-  contents: read
-
 jobs:
-  build:
-    name: Build Flutter APK
+  build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
-          distribution: temurin
+          distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          cache: true
+          flutter-version: 'latest'
+          channel: 'stable'
 
-      - name: Check Flutter project
-        run: flutter --version
-
-      - name: Get dependencies
+      - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build release APK
-        run: flutter build apk --release
+      - name: Build Web
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: android-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 14
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
