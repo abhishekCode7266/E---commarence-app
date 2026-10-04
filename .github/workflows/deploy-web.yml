@@ -23,12 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -44,8 +38,11 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Static Analysis
+        run: flutter analyze --no-fatal-infos
+
       - name: Build Web
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/" -v
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

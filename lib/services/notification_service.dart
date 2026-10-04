@@ -17,9 +17,11 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin? _localNotifications =
+      kIsWeb ? null : FlutterLocalNotificationsPlugin();
+
+  FirebaseMessaging? _fcmInstance;
+  FirebaseMessaging get _fcm => _fcmInstance ??= FirebaseMessaging.instance;
 
   bool _initialized = false;
 
@@ -27,9 +29,13 @@ class NotificationService {
   Future<void> initialize({Function(String?)? onNotificationTap}) async {
     if (_initialized) return;
 
-    if (!kIsWeb) {
+    if (!kIsWeb && _localNotifications != null) {
       // Initialize time zone database for exact reminders on mobile
-      tz.initializeTimeZones();
+      try {
+        tz.initializeTimeZones();
+      } catch (e) {
+        debugPrint('Timezone initialization note: $e');
+      }
 
       // Android initialization settings
       const AndroidInitializationSettings androidSettings =
@@ -76,16 +82,18 @@ class NotificationService {
       }
     }
 
-    // Configure FCM
-    await _configureFCM();
+    // Configure FCM safely
+    try {
+      await _configureFCM();
+    } catch (e) {
+      debugPrint('FCM configuration note: $e');
+    }
 
     _initialized = true;
   }
 
   /// Request permissions for local and push notifications.
   Future<bool> requestPermissions() async {
-    bool localGranted = false;
-
     if (kIsWeb) {
       try {
         final settings = await _fcm.requestPermission(
@@ -100,14 +108,18 @@ class NotificationService {
       }
     }
 
-    if (defaultTargetPlatform == TargetPlatform.android) {
+    bool localGranted = false;
+
+    if (defaultTargetPlatform == TargetPlatform.android &&
+        _localNotifications != null) {
       final androidImplementation = _localNotifications
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       localGranted =
           await androidImplementation?.requestNotificationsPermission() ??
               false;
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS &&
+        _localNotifications != null) {
       final iosImplementation = _localNotifications
           .resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin>();
@@ -120,17 +132,20 @@ class NotificationService {
           false;
     }
 
-    // Request FCM Push Notification Permission
-    final settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
+    try {
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
 
-    return localGranted &&
-        (settings.authorizationStatus == AuthorizationStatus.authorized ||
-            settings.authorizationStatus == AuthorizationStatus.provisional);
+      return localGranted &&
+          (settings.authorizationStatus == AuthorizationStatus.authorized ||
+              settings.authorizationStatus == AuthorizationStatus.provisional);
+    } catch (e) {
+      return localGranted;
+    }
   }
 
   /// Configure Firebase Cloud Messaging event listeners.
@@ -170,7 +185,7 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    if (kIsWeb) return;
+    if (kIsWeb || _localNotifications == null) return;
 
     const NotificationDetails details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -195,7 +210,7 @@ class NotificationService {
     required DateTime scheduledDate,
     String? payload,
   }) async {
-    if (kIsWeb) return;
+    if (kIsWeb || _localNotifications == null) return;
     if (scheduledDate.isBefore(DateTime.now())) return;
 
     final tz.TZDateTime tzScheduledDate =
@@ -232,13 +247,13 @@ class NotificationService {
 
   /// Cancel a scheduled task reminder by its ID.
   Future<void> cancelReminder(int id) async {
-    if (kIsWeb) return;
+    if (kIsWeb || _localNotifications == null) return;
     await _localNotifications.cancel(id);
   }
 
   /// Cancel all pending notifications.
   Future<void> cancelAll() async {
-    if (kIsWeb) return;
+    if (kIsWeb || _localNotifications == null) return;
     await _localNotifications.cancelAll();
   }
 }
