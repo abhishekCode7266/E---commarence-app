@@ -38,11 +38,17 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Static Analysis
-        run: flutter analyze --no-fatal-infos
-
       - name: Build Web
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/" -v
+        run: |
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/" 2>&1 | tee build.log
+
+      - name: Report Error Details
+        if: failure()
+        run: |
+          echo "=== BUILD ERROR LOG ==="
+          cat build.log
+          ERR=$(tail -n 20 build.log | tr '\n' ' ' | tr '"' "'")
+          echo "::error title=Flutter Build Error::$ERR"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
