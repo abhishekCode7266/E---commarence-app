@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for authorization and data validation
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profile document rules
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // User's scoped tasks subcollection
+      // Prevents any user from reading or modifying another user's tasks
+      match /tasks/{taskId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+    }
+
+    // Default deny all other collections to prevent unauthorized access
+    match /{document=**} {
+      allow read, write: false;
+    }
+  }
+}
