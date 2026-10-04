@@ -94,6 +94,22 @@ class AppAuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Direct developer / reviewer bypass into application without credentials.
+  Future<bool> developerBypass() async {
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      await _authService.developerBypass();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
   /// Sign out current user.
   Future<void> logout() async {
     _setLoading(true);

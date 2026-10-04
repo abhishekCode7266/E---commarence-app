@@ -60,6 +60,30 @@ class FirestoreService {
       updatedAt: DateTime.now().subtract(const Duration(hours: 12)),
       reminderSet: true,
     ),
+    TaskModel(
+      id: 'demo-task-5',
+      userId: 'demo_user_1',
+      title: 'Review Firebase Security Rules 🔒',
+      description: 'Audit Cloud Firestore security rules for strict user-scoped isolation.',
+      dueDate: DateTime.now().subtract(const Duration(days: 1)),
+      priority: TaskPriority.high,
+      isCompleted: false,
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+      reminderSet: false,
+    ),
+    TaskModel(
+      id: 'demo-task-6',
+      userId: 'demo_user_1',
+      title: 'Push Notifications & Task Reminders 🔔',
+      description: 'Test scheduled notifications and Firebase Cloud Messaging tokens.',
+      dueDate: DateTime.now().add(const Duration(days: 2)),
+      priority: TaskPriority.medium,
+      isCompleted: false,
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+      reminderSet: true,
+    ),
   ];
 
   static final StreamController<List<TaskModel>> _mockStreamController =

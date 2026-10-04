@@ -181,6 +181,19 @@ class AuthService {
     );
   }
 
+  /// Instant developer / tester bypass without credentials.
+  Future<AppUser> developerBypass() async {
+    final devUser = AppUser(
+      uid: 'dev_bypass_001',
+      email: 'developer@taskflow.preview',
+      displayName: 'Developer (Bypassed)',
+      createdAt: DateTime.now(),
+    );
+    _mockUser = devUser;
+    _mockController.add(devUser);
+    return devUser;
+  }
+
   String _handleFirebaseAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
