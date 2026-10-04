@@ -46,21 +46,31 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build Web
+      - name: Analyze Project
         run: |
-          if ! flutter build web --release --base-href "/${{ github.event.repository.name }}/" 2>&1 | tee flutter_build.log; then
-            echo "::error title=Flutter Build Error::flutter build web failed. See summary below."
-            echo "### Flutter Build Failed ❌" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 80 flutter_build.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            cat flutter_build.log
-            exit 1
+          flutter analyze || true
+
+      - name: Build Web
+        id: build
+        run: |
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/" 2>&1 | tee build.log
+          STATUS=${PIPESTATUS[0]}
+          echo "BUILD_STATUS=$STATUS" >> $GITHUB_ENV
+          echo "### Flutter Build Output (Exit Code: $STATUS)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat build.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error title=Flutter Build Failed::flutter build web failed with exit code $STATUS"
+            exit $STATUS
           fi
 
       - name: Verify Web Build Artifacts
         run: |
-          echo "=== Web Build Contents ==="
+          echo "### Web Directory Listing" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ls -la build/web >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
           ls -la build/web
           if [ ! -f build/web/index.html ]; then
             echo "::error::index.html is missing from build/web!"
